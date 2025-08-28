@@ -1,0 +1,35 @@
+/* --- Tailwind (dopo Ionic, per poter override) --- */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --- Utility layout --- */
+html, body, #root {
+  min-height: 100%;       /* ✅ min-height invece di height */
+  height: auto;           /* consente di crescere */
+  overflow-y: auto;       /* ✅ abilita lo scroll verticale */
+  overflow-x: hidden;     /* evita scroll orizzontale indesiderato */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  /* Colore brand Ionic (match con Tailwind se vuoi) */
+  --ion-color-primary: #000000;
+  --ion-color-primary-contrast: #ffffff;
+}
+
+/* Anti-aliasing font */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Supporto dark (se usi Tailwind darkMode: 'class') */
+/*
+:root.dark {
+  --ion-color-primary: #34d399; 
+}
+*/
