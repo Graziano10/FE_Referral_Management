@@ -1,5 +1,5 @@
 // src/pages/Home.tsx
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../hooks";
 import {
   selectProfiles,
@@ -25,6 +25,12 @@ import {
 import { getProfileByIdThunk } from "../features/profiles/getProfileByIdThunk";
 
 import type { PersonType } from "../lib/referrals";
+import Select from "../ui/Select";
+import { fetchAllProfiles } from "../utils/fetchAllProfiles";
+import DeleteConfirmModal from "../ui/DeleteConfirmModal";
+import { toast } from "react-toastify";
+import { deleteProfileThunk } from "../features/profiles/deleteProfileThunk";
+import { Icon } from "../ui/Icon";
 
 export default function Home() {
   const dispatch = useAppDispatch();
@@ -41,6 +47,19 @@ export default function Home() {
   // Stati locali
   const [search, setSearch] = useState("");
   const [role, setRole] = useState("");
+
+  // Export
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportFormat, setExportFormat] = useState<
+    "" | "csv" | "json" | "xlsx"
+  >("");
+
+  // Stato per delete modal
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [profileToDelete, setProfileToDelete] = useState<{
+    id: string;
+    email: string;
+  } | null>(null);
 
   const [type, setType] = useState<"" | PersonType>("");
   const [region, setRegion] = useState("");
@@ -173,6 +192,20 @@ export default function Home() {
       render: (r) =>
         r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "—",
     },
+    {
+      key: "actions",
+      header: "Azioni",
+      render: (r) => (
+        <button
+          type="button"
+          onClick={() => openDeleteModal(r._id, r.email)}
+          className="p-2 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-800 transition-colors"
+          title="Elimina profilo"
+        >
+          <Icon name="delete" size={20} strokeWidth={2} />
+        </button>
+      ),
+    },
   ];
 
   const sortKey = sort.split(":")[0];
@@ -185,6 +218,116 @@ export default function Home() {
   const progressToNext = nextRank
     ? Math.min(100, Math.round((totalRefs / nextRank.min) * 100))
     : 100;
+
+  // Export data
+
+  const handleExport = async (format: "csv" | "json" | "xlsx") => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    // ottieni tutti i profili, non solo quelli della pagina corrente
+    const allProfiles = await fetchAllProfiles({
+      dispatch,
+      token,
+      q: search || undefined,
+      region: region || undefined,
+      type:
+        type === "Azienda"
+          ? "azienda"
+          : type === "PersonaFisica"
+          ? "persona"
+          : undefined,
+      verified:
+        verified === "yes" ? true : verified === "no" ? false : undefined,
+      sortBy: sort.split(":")[0] as
+        | "createdAt"
+        | "dateJoined"
+        | "lastLogin"
+        | "lastActivity"
+        | "firstName"
+        | "lastName"
+        | "email"
+        | "companyName", // 👈 cast esplicito
+      sortDir: (sort.split(":")[1] as "asc" | "desc") || "desc",
+    });
+
+    if (!allProfiles.length) return;
+
+    let blob: Blob;
+
+    if (format === "json") {
+      blob = new Blob([JSON.stringify(allProfiles, null, 2)], {
+        type: "application/json",
+      });
+    } else if (format === "csv") {
+      const header = Object.keys(allProfiles[0]).join(",") + "\n";
+      const rows = allProfiles
+        .map((row) => Object.values(row).join(","))
+        .join("\n");
+      blob = new Blob([header + rows], { type: "text/csv" });
+    } else {
+      // "xlsx" -> per semplicità esportiamo CSV con estensione .xlsx
+      const header = Object.keys(allProfiles[0]).join(",") + "\n";
+      const rows = allProfiles
+        .map((row) => Object.values(row).join(","))
+        .join("\n");
+      blob = new Blob([header + rows], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+    }
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `profiles.${format}`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Delete modal handlers
+  const openDeleteModal = (id: string, email: string) => {
+    setProfileToDelete({ id, email });
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setProfileToDelete(null);
+    setDeleteModalOpen(false);
+  };
+
+  const confirmDelete = async () => {
+    if (!profileToDelete) return;
+    const token = localStorage.getItem("token");
+    if (token) {
+      const action = await dispatch(
+        deleteProfileThunk({ profileId: profileToDelete.id, token })
+      );
+
+      if (deleteProfileThunk.fulfilled.match(action)) {
+        toast.success(
+          `Profilo ${action.payload.email} eliminato con successo`,
+          {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          }
+        );
+      } else {
+        toast.error("Errore durante l'eliminazione del profilo", {
+          position: "top-right",
+          autoClose: 4000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+    }
+    closeDeleteModal();
+  };
 
   return (
     <div className="space-y-4">
@@ -234,14 +377,35 @@ export default function Home() {
           }}
           extra={
             <div className="flex gap-2">
-              <CTA_Button
-                variant="secondary"
-                onClick={() => {
-                  /* export/csv */
-                }}
-              >
-                Esporta
-              </CTA_Button>
+              <div className="flex items-center gap-2">
+                <CTA_Button
+                  variant="secondary"
+                  onClick={() => setExportOpen((prev) => !prev)}
+                >
+                  Esporta
+                </CTA_Button>
+
+                {exportOpen && (
+                  <div className="w-40">
+                    <Select
+                      fullWidth
+                      size="sm"
+                      options={[
+                        { value: "csv", label: "CSV" },
+                        { value: "xlsx", label: "Excel (.xlsx)" },
+                        { value: "json", label: "JSON" },
+                      ]}
+                      value={exportFormat}
+                      onChange={(e) => {
+                        const val = e.target.value as "csv" | "json" | "xlsx";
+                        setExportFormat(val);
+                        handleExport(val);
+                        setExportOpen(false);
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
 
               {/* 🔄 Reset filtri */}
               <CTA_Button
@@ -421,6 +585,15 @@ export default function Home() {
           </div>
         )}
       </ModalShell>
+
+      {/* DELETE MODAL */}
+
+      <DeleteConfirmModal
+        open={deleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={confirmDelete}
+        email={profileToDelete?.email}
+      />
     </div>
   );
 }

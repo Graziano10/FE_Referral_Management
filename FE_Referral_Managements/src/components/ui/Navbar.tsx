@@ -60,7 +60,7 @@ const Navbar: React.FC<NavbarProps> = ({
             className="flex items-center gap-2 font-heading text-lg font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/60 rounded-md"
             onClick={closeMenu}
           >
-            {logo ?? <span className="text-brand">Referral CRM</span>}
+            {logo ?? <span className="text-brand">Referral Dashboard</span>}
           </NavLink>
         </div>
 

@@ -19,7 +19,12 @@ export type IconName =
   | "eye-off"
   | "building"
   | "map-pin"
-  | "id-card";
+  | "id-card"
+  | "copy"
+  | "share"
+  | "menu"
+  | "delete"
+  | "edit";
 
 const ICON_PATHS: Record<IconName, React.ReactNode> = {
   check: (
@@ -28,6 +33,14 @@ const ICON_PATHS: Record<IconName, React.ReactNode> = {
       strokeLinejoin="round"
       d="M4.5 12.75l6 6 9-13.5"
     />
+  ),
+  share: (
+    <>
+      <circle cx="18" cy="5" r="3" />
+      <circle cx="6" cy="12" r="3" />
+      <circle cx="18" cy="19" r="3" />
+      <path d="M8.59 13.51l6.83 3.98M15.41 6.51L8.59 10.49" />
+    </>
   ),
   x: (
     <path
@@ -135,6 +148,34 @@ const ICON_PATHS: Record<IconName, React.ReactNode> = {
       <rect x="3" y="5" width="18" height="14" rx="2" ry="2" />
       <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h4M8 14h8" />
     </>
+  ),
+  edit: (
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M11 4h2l7 7-9 9H4v-7l7-7zM15 7l2 2"
+    />
+  ),
+  menu: (
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+    />
+  ),
+  copy: (
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M8 8h12v12H8zM4 4h12v12H4z"
+    />
+  ),
+  delete: (
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M6 7h12M10 11v6m4-6v6M5 7l1 12a2 2 0 002 2h8a2 2 0 002-2l1-12M9 7V5a3 3 0 013-3h0a3 3 0 013 3v2"
+    />
   ),
 };
 

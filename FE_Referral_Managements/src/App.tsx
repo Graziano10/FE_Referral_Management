@@ -96,7 +96,6 @@ export default function App() {
     <div className="min-h-screen bg-gray-50 text-neutral-900">
       {!hideNavbar && (
         <Navbar
-          logo={<img src="/vite.svg" alt="logo" className="h-6" />}
           links={navLinks}
           actions={
             isAuthed || getToken() ? (

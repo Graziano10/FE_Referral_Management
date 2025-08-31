@@ -1,7 +1,7 @@
 // src/components/ui/Avatar.tsx
 import React, { useState } from "react";
-import { Icon } from "./Icon"; // <-- verifica il path corretto (es: "../../ui/Icon")
-import { cn } from "./utils/cn"; // <-- se non hai cn, vedi snippet in fondo
+import { cn } from "./utils/cn";
+import { Icon } from "../../ui/Icon";
 
 export type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
 

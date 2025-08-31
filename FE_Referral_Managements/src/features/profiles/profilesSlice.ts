@@ -5,6 +5,7 @@ import {
   type GetProfileByIdResponse,
 } from "./getProfileByIdThunk";
 import type { RootState } from "@/app/store";
+import { deleteProfileThunk } from "./deleteProfileThunk";
 
 type ProfilesState = {
   list: {
@@ -79,6 +80,22 @@ export const profilesSlice = createSlice({
         state.detailError =
           (action.payload as { message?: string })?.message ??
           "Errore nel recupero del profilo";
+      });
+
+    // DELETE PROFILE
+    builder
+      .addCase(deleteProfileThunk.fulfilled, (state, action) => {
+        if (state.list) {
+          state.list.docs = state.list.docs.filter(
+            (p: ProfileDoc) => p._id !== action.payload._id
+          );
+          state.list.totalDocs = Math.max(0, state.list.totalDocs - 1);
+        }
+      })
+      .addCase(deleteProfileThunk.rejected, (state, action) => {
+        state.listError =
+          (action.payload as { message?: string })?.message ??
+          "Errore eliminazione profilo";
       });
   },
 });
