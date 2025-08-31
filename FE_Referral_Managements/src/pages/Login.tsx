@@ -1,7 +1,7 @@
 // src/pages/Login.tsx
 import React, { useState } from "react";
 import Card from "../components/ui/Card";
-import { Icon } from "../components/ui/Icon";
+import { Icon } from "../ui/Icon";
 import { Input } from "../components/ui/Input";
 import Checkbox from "../components/ui/Checkbox";
 import CTA_Button from "../components/ui/CTA_Button";
